@@ -1,0 +1,9 @@
+# Preguntas de Geografía Mundial
+¿Cual es la capital de España?:Madrid
+¿Cual es el río más caudaloso de España?:Ebro
+¿Cual es el río más largo de España?:Tajo
+¿En qué país está el lago Titicaca?:Perú
+¿En qué país está el lago Ness?:Escocia
+
+
+

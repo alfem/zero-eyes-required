@@ -9,33 +9,53 @@
 
 import sys
 from configobj import ConfigObj
-
-sys.path.append("./lib")
-
-import Voice
-
-# Main
-def main():
+import random
 
 # Load main config file
-    CONF = ConfigObj("zer.conf")
+CONF = ConfigObj("zer.conf")
+
+sys.path.append("./lib")
+import Voice
+import Quiz
+
+
+def dialog(key):
+    if key in CONF["DIALOGS"]:
+        return random.choice(CONF["DIALOGS"][key])
+    else:
+        return "No dialog defined in configuration file"
+
+# MAIN
+def main():
 
     SYNTH = Voice.Synth(CONF['SYNTH'])
-    RECOG = Voice.Recog()
+    RECOG = Voice.Recog(CONF['RECOG'])
+    QUIZ = Quiz.SimpleQuiz(CONF['quiz'])
 
     while True:
-      SYNTH.say("How many players?")
+      SYNTH.say(dialog("ask_for_players"))
       confidence,answer=RECOG.listen()
-      nplayers=int(answer)
-      print "Players:", nplayers
-      players=[]
-      for n in range(1,nplayers+1):
-          print n
-          SYNTH.say("What is the name of player "+str(n)+"?" )
+      players=answer.split()
+      nplayers=len(players)
+      print "Players: ", nplayers
+      SYNTH.say(dialog("players") % nplayers)
+
+      SYNTH.say(dialog("start_the_game"))
+
+      for n in range(0,nplayers):
+          SYNTH.say(dialog("ask_player") % players[n])
+          SYNTH.say(QUIZ.get_question())
           confidence,answer=RECOG.listen()
-          SYNTH.say("Player "+str(n)+" is "+answer)
-          players.append(answer)
-      
+
+          if answer==CONF["quit_command"]:
+              break
+
+          if QUIZ.check_answer(answer):
+              SYNTH.say(dialog("answer_is_right"))
+          else: 
+              SYNTH.say(dialog("answer_is_wrong"))
+              SYNTH.say(dialog("the_right_answer_is") % QUIZ.get_answer())  
+           
       SYNTH.close()
       break
 

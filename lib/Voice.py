@@ -20,50 +20,60 @@ import urllib2, os
 import simplejson
 
 # For voice synthesys
-import speechd
-
+#import speechd
+import subprocess  #temporary solution to speechd bug
 
 class Synth:
     def __init__(self,CONF):
-        self.client=speechd.SSIPClient('zer')
-        self.client.set_output_module(CONF["module"])
-        self.client.set_language(CONF["language"])
-        self.client.set_pitch(int(CONF["pitch"]))
-        self.client.set_rate(int(CONF["rate"]))
-        self.client.set_synthesis_voice(CONF["voice"])
-        self.client.set_punctuation(speechd.PunctuationMode.SOME)
+        print "Using "+CONF["module"],CONF["voice"],"voice"
+        self.voice=CONF["voice"]
+#        self.client=speechd.SSIPClient('zer')
+#        self.client.set_output_module(CONF["module"])
+#        self.client.set_language(CONF["language"])
+#        self.client.set_pitch(int(CONF["pitch"]))
+#        self.client.set_rate(int(CONF["rate"]))
+#        self.client.set_synthesis_voice(CONF["voice"])
+#        self.client.set_punctuation(speechd.PunctuationMode.SOME)
         return
 
     def say(self,text):
-      print "I say ", text
+      print "I say:", text
 #      self.client.speak(text)
+      subprocess.call('espeak -v'+self.voice+' "'+text+'"', shell=True)
+#      subprocess.call('echo "'+text+'"|festival --tts', shell=True)
+
+
 
     def close(self):
       self.client.close()
 
 class Recog:
-    def __init__(self):
+    def __init__(self,CONF):
 
-        self.threshold = 2000
+        self.language = CONF['language']
+        self.threshold = CONF['silence_level']
         self.chunk_size = 1024
         self.format = pyaudio.paInt16
         self.rate = 16000
+
         return
 
     def listen(self):
         print "Listening..."
+        return 100,raw_input()
         self.record_to_file("/tmp/zer.wav")
         print "Voice recorded to wav. Converting to flac..."
-        self.wav_to_flac("/tmp/zer.wav","/tmp/zer.flac")
-        json_answer=self.send_flac("/tmp/zer.flac")
+        self._wav_to_flac("/tmp/zer.wav","/tmp/zer.flac")
+        json_answer=self._recognize_flac("/tmp/zer.flac")
         js=simplejson.loads(json_answer)
         confidence=js['hypotheses'][0]['confidence']
         text=js['hypotheses'][0]['utterance']
+        print "You say:", text
         return confidence,text
 
-    def send_flac(self,filename):
+    def _recognize_flac(self,filename):
         print "Recognizing..."
-        url = 'https://www.google.com/speech-api/v1/recognize?lang=es&client=chromium'
+        url = 'https://www.google.com/speech-api/v1/recognize?lang='+self.language+'&client=chromium'
         length = os.path.getsize(filename)
         filedata = open(filename, "rb")
         request = urllib2.Request(url, data=filedata)
@@ -74,18 +84,18 @@ class Recog:
         return res
 
 
-    def print_progress(self,x,y):
+    def _print_progress(self,x,y):
         print "%d%%" % (x*100/y)
 
-    def wav_to_flac(self,w,f):
+    def _wav_to_flac(self,w,f):
         audiotools.open(w).convert(f,audiotools.FlacAudio,progress=self.print_progress)
         return
 
 
-    def is_silent(self,snd_data):
+    def _is_silent(self,snd_data):
         return max(snd_data) < self.threshold
 
-    def normalize(self,snd_data):
+    def _normalize(self,snd_data):
         maximun = 16384
         times = float(maximun)/max(abs(i) for i in snd_data)
 
@@ -117,7 +127,7 @@ class Recog:
         snd_data.reverse()
         return snd_data
 
-    def add_silence(self,snd_data, seconds):
+    def _add_silence(self,snd_data, seconds):
         r = array('h', [0 for i in xrange(int(seconds*self.rate))])
         r.extend(snd_data)
         r.extend([0 for i in xrange(int(seconds*self.rate))])
@@ -140,7 +150,7 @@ class Recog:
                 snd_data.byteswap()
             r.extend(snd_data)
 
-            silent = self.is_silent(snd_data)
+            silent = self._is_silent(snd_data)
 
             if silent and snd_started:
                 num_silent += 1
@@ -155,9 +165,9 @@ class Recog:
         stream.close()
         p.terminate()
 
-        r = self.normalize(r)
+        r = self._normalize(r)
         r = self.trim(r)
-        r = self.add_silence(r, 0.5)
+        r = self._add_silence(r, 0.5)
         return sample_width, r
 
     def record_to_file(self,filename):
