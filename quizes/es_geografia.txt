@@ -4,6 +4,20 @@
 ¿Cual es el río más largo de España?:Tajo
 ¿En qué país está el lago Titicaca?:Perú
 ¿En qué país está el lago Ness?:Escocia
+¿Cual es la capital de Argentina?:Buenos Aires
+¿Cual es la capital de Australia?:Canberra
+¿Cual es la capital de Bulgaria?:Sofía
+¿Cual es la capital de Croacia?:Zagreb
+¿Cual es la capital de Ecuador?:Quito
+¿Cual es la capital de Finlandia?:Helsinki
+¿Cual es la capital de Alemania?:Berlín
+¿Cual es la capital de Honduras?:Tegucigalpa
+¿Cual es la capital de Hungría?:Budapest
+¿Cual es la capital de Japón?:Tokio
+¿Cual es la capital de Kenia?:Nairobi
+
+
+
 
 
 

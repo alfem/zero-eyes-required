@@ -8,6 +8,7 @@
 # Version: 1.0 - 4/Apr/2013
 
 import random
+import unicodedata
 
 class SimpleQuiz:
     def __init__(self,filename):
@@ -34,6 +35,7 @@ class SimpleQuiz:
  
     def _normalize(self,txt):
         txt=txt.strip().lower()
+        txt=''.join(c for c in unicodedata.normalize('NFD', txt) if unicodedata.category(c) != 'Mn')
         txt=txt.encode("ascii",errors='replace')
         return txt
 

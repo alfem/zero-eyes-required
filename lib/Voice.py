@@ -26,6 +26,7 @@ import subprocess  #temporary solution to speechd bug
 class Synth:
     def __init__(self,CONF):
         print "Using "+CONF["module"],CONF["voice"],"voice"
+        self.module=CONF["module"]
         self.voice=CONF["voice"]
 #        self.client=speechd.SSIPClient('zer')
 #        self.client.set_output_module(CONF["module"])
@@ -39,8 +40,10 @@ class Synth:
     def say(self,text):
       print "I say:", text
 #      self.client.speak(text)
-      subprocess.call('espeak -v'+self.voice+' "'+text+'"', shell=True)
-#      subprocess.call('echo "'+text+'"|festival --tts', shell=True)
+      if self.module=="espeak":
+          subprocess.call('espeak -v'+self.voice+' "'+text+'" 2>/dev/null', shell=True)
+      elif self.module=="festival":
+          subprocess.call('echo "'+text+'"|festival --tts', shell=True)
 
 
 
@@ -60,7 +63,8 @@ class Recog:
 
     def listen(self):
         print "Listening..."
-        return 100,raw_input()
+        text=unicode(raw_input(),"utf-8")
+        return 100,text
         self.record_to_file("/tmp/zer.wav")
         print "Voice recorded to wav. Converting to flac..."
         self._wav_to_flac("/tmp/zer.wav","/tmp/zer.flac")
